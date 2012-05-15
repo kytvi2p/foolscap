@@ -205,6 +205,7 @@ class Tub(service.MultiService):
                     connection negotiation. Currently defined keys are:
                      - debug_slow: if True, wait half a second between
                                    each negotiation response
+                     - http-proxy: if set, connect using this HTTP proxy
 
     @ivar brokers: maps TubIDs to L{Broker} instances
 
@@ -363,6 +364,8 @@ class Tub(service.MultiService):
             self.setLogGathererFURL(value)
         elif name == "log-gatherer-furlfile":
             self.setLogGathererFURLFile(value)
+        elif name == "http-proxy":
+            self.options['http-proxy'] = value
         elif name == "bridge-twisted-logs":
             assert value is not False, "cannot unbridge twisted logs"
             if value is True:

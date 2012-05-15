@@ -782,6 +782,13 @@ def decode_location_hints(hints_s):
         if mo:
             hint = ( "ipv4", mo.group(1), int(mo.group(2)) )
             hints.append(hint)
+        elif hint_s.startswith("i2p:"):
+            (protocol, destination) = hints_s.split(":", 2)
+            hint = ( "ipv4", destination, 0) # I2P destinations have no port
+            hints.append(hint)
+        elif hint_s.endswith(".b32.i2p"): # For compatibility, to be removed in a future version
+            hint = ( "ipv4", hint_s, 0)
+            hints.append(hint)
         else:
             # some extension from the future that we will ignore
             pass

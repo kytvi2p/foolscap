@@ -329,13 +329,18 @@ class Negotiation(protocol.Protocol):
         # we are using an encrypted Tub is separate, and expressed in our
         # Hello block.
         req = []
+        proxyPrefix = ''
+        if 'http-proxy' in self.tub.options:
+            proxyPrefix = 'http://' + self.targetHost
+            self.log("sendPlaintextClient: using HTTP Proxy %s"
+                % self.tub.options['http-proxy'])
         if self.target.encrypted:
             self.log("sendPlaintextClient: GET for tubID %s" %
                      self.target.tubID)
-            req.append("GET /id/%s HTTP/1.1" % self.target.tubID)
+            req.append("GET %s/id/%s HTTP/1.1" % (proxyPrefix, self.target.tubID))
         else:
             self.log("sendPlaintextClient: GET for no tubID")
-            req.append("GET /id/ HTTP/1.1")
+            req.append("GET %s/id/ HTTP/1.1" % proxyPrefix)
         req.append("Host: %s" % self.targetHost)
         self.log("sendPlaintextClient: wantEncryption=%s" % self.wantEncryption)
         if self.wantEncryption:
@@ -1359,10 +1364,15 @@ class TubConnector(object):
             if location in self.attemptedLocations:
                 continue
             self.attemptedLocations.append(location)
-            host, port = location
+            if 'http-proxy' in self.tub.options:
+                host, port = self.tub.options['http-proxy'].split(':')
+                destination = location[0]
+            else:
+                host, port = location
+                destination = host
             lp = self.log("connectTCP to %s" % (location,))
-            f = TubConnectorClientFactory(self, host, lp)
-            c = reactor.connectTCP(host, port, f)
+            f = TubConnectorClientFactory(self, destination, lp)
+            c = reactor.connectTCP(host, int(port), f)
             self.pendingConnections[f] = c
             # the tcp.Connector that we get back from reactor.connectTCP will
             # retain a reference to the transport that it creates, so we can
