@@ -782,12 +782,24 @@ def decode_location_hints(hints_s):
     hints = []
     if hints_s:
         for hint_s in hints_s.split(","):
-            if ":" not in hint_s:
+            if (
+                ":" not in hint_s and not hint_s.endswith(".i2p")
+                        and not hint_s.startswith("i2p:")
+                        and not hint_s.startswith("tor:")
+                        and not hint_s.endswith(".onion")
+                ):
                 raise BadFURLError("bad connection hint '%s' "
                                    "(hostname, but no port)" % hint_s)
             mo = IPV4_HINT_RE.search(hint_s)
             if mo:
                 hint = ( "ipv4", mo.group(1), int(mo.group(2)) )
+                hints.append(hint)
+            elif hint_s.startswith("i2p:"):
+                (protocol, destination) = hints_s.split(":", 2)
+                hint = ( "ipv4", destination, 0) # I2P destinations have no port
+                hints.append(hint)
+            elif hint_s.endswith(".i2p"): # For compatibility, to be removed in a future version
+                hint = ( "ipv4", hint_s, 0)
                 hints.append(hint)
             else:
                 # This is some extension from the future that we will ignore.
